@@ -265,15 +265,6 @@ flex-shrink: 0;
 
 .back-btn.hidden { visibility: hidden; pointer-events: none; }
 
-.theme-night .back-btn {
-border-color: rgba(255,255,255,0.12);
-color: rgba(220,205,185,0.5);
-}
-.theme-night .back-btn:hover {
-border-color: var(–accent);
-color: var(–accent);
-background: rgba(232,184,112,0.08);
-}
 #quiz {
 padding: 0;
 flex-direction: column;
@@ -604,34 +595,20 @@ from { opacity: 0; transform: translateY(20px); }
 to { opacity: 1; transform: translateY(0); }
 }
 
-/* theme colors per question */
-.theme-warm { –bg:#f5ede0; –accent:#c8813a; –soft:#ecdfc9; }
-.theme-cold { –bg:#e8eef5; –accent:#5a7fa8; –soft:#d0dce9; }
-.theme-dusk { –bg:#f0e8f2; –accent:#9a6ab0; –soft:#e0d0e8; }
-.theme-night { –bg:#12121c; –accent:#e8b870; –soft:#2a2a3a; –text:#f0e8d8; –card:#1e1e2e; –shadow:rgba(0,0,0,0.4); }
-.theme-green { –bg:#e8f2e8; –accent:#5a9a6a; –soft:#d0e8d0; }
-.theme-sand { –bg:#f2ede0; –accent:#b07040; –soft:#e0d4b8; }
+/* Reset browser default button styles (fixes blue text on GitHub Pages) */
+button {
+-webkit-appearance: none;
+appearance: none;
+color: inherit;
+font-family: inherit;
+}
 
-.theme-night .quiz-header {
-background: rgba(18,18,28,0.7);
-border-bottom-color: rgba(255,255,255,0.08);
-}
-.theme-night .opt-btn {
-background: rgba(40,40,60,0.8);
-border-color: rgba(255,255,255,0.1);
-}
-.theme-night .opt-btn:hover, .theme-night .opt-btn.selected {
-background: rgba(60,55,40,0.6);
-border-color: var(–accent);
-}
-.theme-night .opt-text { color: #f0e8d8; }
-.theme-night .q-title { color: #f0e8d8; }
-.theme-night .q-desc { color: rgba(235,218,195,0.88); border-bottom-color: rgba(255,255,255,0.08); }
-.theme-night .q-scene { color: rgba(232,184,112,0.7); }
-.theme-night .progress-track { background: rgba(255,255,255,0.1); }
-.theme-night .q-num-label, .theme-night #q-num-label { color: var(–accent); }
-.theme-night #q-progress-pct { color: rgba(220,205,185,0.6); }
-.night-text { –text: #e8dcc8; }
+/* theme colors per question */
+.theme-warm  { –bg:#f5ede0; –accent:#c8813a; –soft:#ecdfc9; –text:#1a1410; }
+.theme-cold  { –bg:#e8eef5; –accent:#5a7fa8; –soft:#d0dce9; –text:#1a1410; }
+.theme-dusk  { –bg:#f0e8f2; –accent:#9a6ab0; –soft:#e0d0e8; –text:#1a1410; }
+.theme-green { –bg:#e8f2e8; –accent:#5a9a6a; –soft:#d0e8d0; –text:#1a1410; }
+.theme-sand  { –bg:#f2ede0; –accent:#b07040; –soft:#e0d4b8; –text:#1a1410; }
 </style>
 
 </head>
@@ -687,16 +664,16 @@ border-color: var(–accent);
 <script>
 const questions = [
   {
-    title: "逛公园的好天气",
+    title: "这绝对是个逛公园的好天气",
     desc: "昨晚大暴雨，现在凉快了。钉子站在阳台。",
-    options: ["干点正经事", "出去拍照", "今天不想动", "享受这一刻"],
+    options: ["干点正经事儿", "出门遛遛", "今天不想动", "再墨迹一会儿"],
     weather: "sunny-after-rain",
     theme: "warm"
   },
   {
     title: "夏天会好一点吧",
     desc: "冬天，一个人在路上走。冷。钉子把手缩进袖子里。",
-    options: ["向冷风低头", "英勇就义之感", "出来干啥", "冷就冷吧没招了"],
+    options: ["赶紧回去", "英勇就义之感", "出来干啥", "冷就冷吧没招了"],
     weather: "cold-wind",
     theme: "cold"
   },
@@ -715,14 +692,14 @@ const questions = [
     theme: "green"
   },
   {
-    title: "种满树的杭州",
-    desc: "绕着西湖骑车。行驶在树林里。",
+    title: "来过好多次，每次都不一样",
+    desc: "杭州，绕着西湖骑车。行驶在树林里。",
     options: ["今天就骑到这儿吧", "去看看湖上划船的人", "停下来 在湖边坐一会儿", "一直骑 骑到骑不动"],
     weather: "dappled",
     theme: "green"
   },
   {
-    title: "好奇又害怕",
+    title: "既好奇，又有点怕",
     desc: "雕塑园海滩上，钉子看见一种不认识的小脚印，密密麻麻沿着海岸。",
     options: ["蹲下来研究清楚", "拍张照就走", "视而不见", "害怕地站远一点"],
     weather: "beach",
@@ -736,22 +713,22 @@ const questions = [
     theme: "dusk"
   },
   {
-    title: "真年轻啊 ，年轻真好",
+    title: "真年轻啊 年轻真好",
     desc: "山路上，破摩托油门拧到一百码。风灌进袖子，眼泪从眼眶滑出来。",
     options: ["安全第一", "加速试试", "路边是谁的雕塑", "向目的地进发"],
     weather: "windy",
     theme: "warm"
   },
   {
-    title: "幸运的吧，还是幸运的",
-    desc: "玉龙雪山脚下等日出。同行的人说看过日照金山这辈子就值了。或许吧。",
+    title: "幸运的吧，但还是幸运的",
+    desc: "玉龙雪山脚下等日出。同行的人说看过日照金山这辈子就值了。钉子想，足够了。",
     options: ["这样已经很好了", "下次一个人去更远的地方", "什么都不想", "该走了 去下一站"],
     weather: "snow",
     theme: "cold"
   },
   {
-    title: "在夜里忽然想起了什么",
-    desc: "钉子在连廊唱起最喜欢的一首歌",
+    title: "说不上是哪首，就这一句",
+    desc: "有人问钉子最近听什么歌。她脑子里飘进来一句歌词，一直在绕。",
     options: [
       "我看过沙漠下暴雨，看过大海亲吻鲨鱼",
       "我拥有的都是侥幸啊，我失去的都是人生",
@@ -759,7 +736,7 @@ const questions = [
       "扑火，我们相视笑着"
     ],
     weather: "night",
-    theme: "night"
+    theme: "dusk"
   }
 ];
 
@@ -767,7 +744,7 @@ const foods = [
   { emoji:"🥗", name:"轻食套餐", cal:"250–300大卡", ing:["鸡胸肉","西兰花","鲜果"], story:"不知道吃什么的时候就是它。成了习惯，可能这就是土象星座骨子里的秩序感。" },
   { emoji:"🥟", name:"皮蛋鲜肉馄饨", cal:"280–320大卡", ing:["猪肉","紫菜"], story:"路口偶然发现的。是没预料到的惊喜。非常惊艳的鲜美，但是吃几个就腻了。下次再吃。" },
   { emoji:"🥣", name:"水果酸奶碗", cal:"150–200大卡", ing:["蓝莓/草莓","无糖酸奶"], story:"甜甜的，清清爽爽。感觉很健康好久没吃了。还留着一点对轻盈日子的念想。" },
-  { emoji:"🌽", name:"排骨炖玉米", cal:"400–450大卡", ing:["排骨","玉米"], story:"看别人吃觉得应该不错，吃了也就那样。可能不会再吃吧，该发掘新食物了。" },
+  { emoji:"🌽", name:"排骨炖玉米", cal:"400–450大卡", ing:["排骨","玉米"], story:"看别人吃觉得应该不错，吃了也就那样。可能不会再吃吧，改发掘新食物了。" },
   { emoji:"🍱", name:"咸肉菜饭", cal:"480–530大卡", ing:["鸡腿","双蛋","青菜"], story:"青菜少，备注也不看，奈何一个鸡腿两个卤蛋。向卤蛋屈服了，好像有点咸。" },
   { emoji:"🥘", name:"泰式打抛饭", cal:"500–560大卡", ing:["肉末","豆角"], story:"在小吃街。国内没有当地的香料用的海天酱油，跟普通豆角盖浇饭一样。白期待了。" },
   { emoji:"🥢", name:"越南小卷粉", cal:"260–300大卡", ing:["米皮","鲜肉"], story:"口味很特别，酸甜咸鲜。老板刚开摊不熟练，我也是第一次吃，包容他们。美味。" },
@@ -876,8 +853,24 @@ function spawnCloud() {
   weatherLayer.appendChild(el);
 }
 
+const themeMap = {
+  warm:  { bg:'#f5ede0', accent:'#c8813a', soft:'#ecdfc9', text:'#1a1410' },
+  cold:  { bg:'#e8eef5', accent:'#5a7fa8', soft:'#d0dce9', text:'#1a1410' },
+  dusk:  { bg:'#f0e8f2', accent:'#9a6ab0', soft:'#e0d0e8', text:'#1a1410' },
+  green: { bg:'#e8f2e8', accent:'#5a9a6a', soft:'#d0e8d0', text:'#1a1410' },
+  sand:  { bg:'#f2ede0', accent:'#b07040', soft:'#e0d4b8', text:'#1a1410' }
+};
+
 function setTheme(theme) {
   document.body.className = `theme-${theme}`;
+  const t = themeMap[theme] || themeMap.warm;
+  const root = document.documentElement;
+  root.style.setProperty('--bg', t.bg);
+  root.style.setProperty('--accent', t.accent);
+  root.style.setProperty('--soft', t.soft);
+  root.style.setProperty('--text', t.text);
+  document.body.style.background = t.bg;
+  document.body.style.color = t.text;
 }
 
 function startQuiz() {
@@ -998,11 +991,9 @@ function restart() {
   current = 0;
   answers = [];
   document.getElementById('result').classList.remove('active');
-  // clear fireworks
   document.querySelectorAll('.result-firework').forEach(e=>e.remove());
   clearWeather();
   setTheme('warm');
-  document.body.style.background = '';
   document.getElementById('home').classList.add('active','page-transition');
 }
 </script>
