@@ -1,285 +1,236 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>钉子今天吃什么</title>
-<style>
-    :root { 
-        --primary: #1a1a1a; 
-        --accent: #d35400;  
-        --bg-default: #f2f2f2; 
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>钉子这顿吃什么</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Serif SC', serif;
+            overflow: hidden;
+            background-color: #f3f4f6;
+            transition: background-color 1.5s ease;
+        }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
-    body { 
-        font-family: "PingFang SC", "STHeiti", sans-serif;
-        background: var(--bg-default); 
-        transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1); 
-        display: flex; justify-content: center; align-items: center; min-height: 100vh;
-        color: #333; overflow: hidden;
-    }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
 
-    /* 天气层 */
-    #weather-layer {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        pointer-events: none; z-index: 1;
-    }
+        .btn-long {
+            width: 240px;
+            height: 50px;
+            background: #333;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
 
-    .container { 
-        width: 100%; max-width: 414px; height: 92vh; 
-        background: rgba(255, 255, 255, 0.4); 
-        backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-        position: relative; display: flex; flex-direction: column; 
-        border-radius: 30px; z-index: 2;
-        box-shadow: 0 40px 100px rgba(0,0,0,0.08);
-        border: 1px solid rgba(255,255,255,0.3);
-    }
+        .btn-long:hover {
+            transform: scale(1.05);
+            background: #000;
+        }
 
-    @media (max-width: 414px) { .container { height: 100vh; border-radius: 0; } }
+        .rain {
+            position: absolute;
+            width: 1px;
+            height: 50px;
+            background: rgba(255,255,255,0.3);
+            top: -50px;
+        }
 
-    /* 逐行动画 */
-    .line { opacity: 0; transform: translateY(15px); animation: lineFadeIn 0.8s forwards; margin-bottom: 10px; }
-    @keyframes lineFadeIn { to { opacity: 1; transform: translateY(0); } }
+        .option-btn {
+            text-align: left;
+            padding: 12px 20px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.5);
+        }
 
-    /* 首页样式 */
-    #page-start { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 40px; }
-    .main-emoji { font-size: 80px; margin-bottom: 20px; }
-    h1 { font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; letter-spacing: 1px; }
-    .subtitle { font-size: 15px; color: #666; font-weight: 300; }
-    
-    /* 长方形按钮优化 */
-    .btn-start { 
-        margin-top: 50px; background: #1a1a1a; color: #fff; width: 220px; padding: 18px 0;
-        border: none; border-radius: 16px; font-weight: 600; font-size: 16px; 
-        cursor: pointer; transition: 0.4s; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        letter-spacing: 4px; padding-left: 20px; /* 视觉对齐 */
-    }
-    .btn-start:active { transform: scale(0.96); opacity: 0.9; }
+        .option-btn:active {
+            background: #333;
+            color: white;
+        }
 
-    /* 答题区样式 */
-    #page-quiz { display: none; flex-direction: column; flex: 1; padding: 40px 30px; overflow-y: auto; }
-    .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 11px; color: #888; letter-spacing: 2px; }
-    .progress-bar { height: 2px; background: rgba(0,0,0,0.05); border-radius: 1px; margin-bottom: 30px; }
-    .progress { height: 100%; background: #1a1a1a; width: 0%; transition: 1s ease; }
-    
-    .q-title-top { font-size: 13px; color: #999; margin-bottom: 15px; font-weight: 400; border-left: 2px solid #1a1a1a; padding-left: 10px; }
-    .q-context-box { font-size: 24px; font-weight: 600; line-height: 1.5; color: #1a1a1a; margin-bottom: 30px; }
-    
-    #options-box { margin-top: auto; padding-bottom: 20px; }
-    .option { 
-        background: rgba(255, 255, 255, 0.7); padding: 20px 24px; border-radius: 18px; margin-bottom: 12px; 
-        cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.5); 
-        font-size: 16px; line-height: 1.4; color: #444; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-    }
-    .option:active { background: #fff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
-
-    /* 结果页 */
-    #page-result { display: none; padding: 40px 30px; text-align: center; }
-    .res-card { 
-        background: #fff; border-radius: 35px; padding: 40px 25px; 
-        box-shadow: 0 30px 70px rgba(0,0,0,0.1); position: relative;
-        animation: cardPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    @keyframes cardPop { from { opacity: 0; transform: scale(0.9) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-    
-    .res-food-name { font-size: 32px; font-weight: 800; margin: 15px 0; color: #1a1a1a; }
-    .res-meta { font-size: 12px; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; font-weight: 600; }
-    .res-desc { text-align: left; font-size: 14px; line-height: 1.8; color: #555; padding: 20px; background: #fbfbfb; border-radius: 20px; }
-
-    /* 动态天气效果 */
-    .rain-drop { position: absolute; background: rgba(0,0,0,0.08); width: 1px; height: 25px; animation: rain linear infinite; }
-    @keyframes rain { to { transform: translateY(100vh); } }
-    .snow-flake { position: absolute; background: #fff; border-radius: 50%; opacity: 0.6; animation: snow linear infinite; }
-    @keyframes snow { to { transform: translateY(100vh) rotate(360deg); } }
-    .sun-glow { position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%); opacity: 0.4; }
-
-    .confetti { position: absolute; width: 8px; height: 8px; z-index: 10; border-radius: 2px; }
-</style>
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.5s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+    </style>
 </head>
-
 <body>
-<div id="weather-layer"></div>
 
-<div class="container">
-    <!-- 首页 -->
-    <div id="page-start">
-        <div class="main-emoji">🍱</div>
-        <h1>钉子今天吃什么</h1>
-        <p class="subtitle">这是一个值得深思的问题</p>
-        <button class="btn-start" id="startBtn">开始深思</button>
+<div id="app" :style="{ backgroundColor: currentBgColor }" class="h-screen w-full flex items-center justify-center relative px-6">
+    
+    <!-- 动态天气背景 -->
+    <div v-if="step === 0" class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div v-for="n in 20" :key="n" class="rain" :style="rainStyle(n)"></div>
     </div>
 
-    <!-- 答题页 -->
-    <div id="page-quiz">
-        <div class="q-header">
-            <span id="q-idx-label">STORY 01</span>
-            <span id="q-percent">10%</span>
+    <!-- 1. 首页 -->
+    <transition name="fade">
+        <div v-if="step === 0" class="text-center z-10">
+            <h1 class="text-4xl font-bold mb-4 tracking-widest text-gray-800">钉子今天吃什么 🥗</h1>
+            <p class="text-gray-500 mb-12 tracking-widest">这是一个值得深思的问题 ￼</p>
+            <div class="flex justify-center">
+                <div @click="nextStep" class="btn-long shadow-lg">开始探索</div>
+            </div>
         </div>
-        <div class="progress-bar"><div class="progress" id="progress"></div></div>
-        <div id="question-content">
-            <p class="q-title-top" id="q-text-small"></p>
-            <div class="q-context-box" id="q-context-box"></div>
-        </div>
-        <div id="options-box"></div>
-    </div>
+    </transition>
 
-    <!-- 结果页 -->
-    <div id="page-result">
-        <div style="font-size: 12px; color: #999; margin-bottom: 25px; letter-spacing: 4px; font-weight: 300;">命中注定的那一餐</div>
-        <div class="res-card">
-            <div id="res-emoji" style="font-size: 70px; margin-bottom: 10px;"></div>
-            <h2 class="res-food-name" id="res-name"></h2>
-            <p class="res-meta" id="res-ingredients"></p>
-            <div class="res-desc" id="res-desc"></div>
+    <!-- 2. 问题页 -->
+    <transition name="fade">
+        <div v-if="step > 0 && step <= totalQuestions" class="w-full max-w-md">
+            <div class="mb-8">
+                <span class="text-xs uppercase tracking-widest text-gray-400 block mb-1">Question {{step}} / 10</span>
+                <h2 class="text-xl font-bold text-gray-800 mb-2 leading-relaxed">
+                    {{ questions[step-1].title }}
+                </h2>
+                <p class="text-sm text-gray-500 animate__animated animate__fadeInUp">
+                    {{ questions[step-1].desc }}
+                </p>
+            </div>
+
+            <div class="flex flex-col">
+                <button 
+                    v-for="(opt, idx) in questions[step-1].options" 
+                    :key="idx"
+                    @click="handleAnswer(idx)"
+                    class="option-btn animate__animated animate__fadeInUp"
+                    :style="{ animationDelay: (idx * 0.1) + 's' }"
+                >
+                    <span class="font-mono mr-2">{{ String.fromCharCode(65 + idx) }}.</span> {{ opt }}
+                </button>
+            </div>
         </div>
-        <button onclick="location.reload()" style="margin-top: 40px; background: none; border: none; color: #999; cursor: pointer; font-size: 13px; text-decoration: underline;">重新感知 ↺</button>
-    </div>
+    </transition>
+
+    <!-- 3. 结果页 (彩蛋设计) -->
+    <transition name="fade">
+        <div v-if="step > totalQuestions" class="text-center w-full max-w-sm">
+            <div class="glass-card p-8 shadow-2xl relative overflow-hidden animate__animated animate__zoomIn">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-red-400 to-pink-500"></div>
+                <div class="text-sm text-gray-400 mb-2">— 钉子的今日惊喜 —</div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">{{ finalFood.name }}</h2>
+                <div class="bg-gray-100 rounded-lg p-4 mb-4 text-left">
+                    <p class="text-xs text-gray-400 mb-1">能量系数：{{ finalFood.kcal }}</p>
+                    <p class="text-xs text-gray-400 mb-2">配料：{{ finalFood.ingredients }}</p>
+                    <p class="text-sm leading-relaxed text-gray-600 border-t pt-2 border-gray-200">
+                        {{ finalFood.story }}
+                    </p>
+                </div>
+                <button @click="reset" class="text-xs text-gray-400 underline mt-4">不满意？再选一次</button>
+            </div>
+        </div>
+    </transition>
 </div>
 
 <script>
-    const questions = [
-        { context: "昨晚大暴雨，现在凉快了。钉子站在阳台，看远处的树。", q: "这绝对是个逛公园的好天气", type: "rain", bg: "#d5e8d4", options: [["A","干点正经事儿"], ["B","出门遛遛"]] },
-        { context: "冬天，一个人在路上走。冷。钉子把手缩进袖子里。想起来夏天。", q: "夏天会好一点吧，哪怕热一点", type: "none", bg: "#e1e4e8", options: [["E","赶紧回去"], ["F","英勇就义之感"]] },
-        { context: "一觉睡到中午。光从窗帘缝漏进来，洒在木地板上。没声音。", q: "今天没什么非做不可的事", type: "sun", bg: "#fff9db", options: [["I","不用赶时间"], ["K","再躺一会儿"]] },
-        { context: "龙子湖傍晚，从白桥上往下冲。风把头发和耳机的线缠在一起。", q: "速度感让人暂时忘记晚餐的纠结", type: "none", bg: "#fce5cd", options: [["N","绕去没走过的那路"], ["O","去湖边坐会儿"]] },
-        { context: "杭州，绕着西湖骑车。行驶在巨大的香樟树影里。深深吸一口气。", q: "来过好多次，每次都不一样", type: "sun", bg: "#e2f3eb", options: [["Q","今天就骑到这儿吧"], ["A","一直骑，骑到骑不动"]] },
-        { context: "雕塑园海滩。一种不认识的小脚印在沙滩蔓延。海浪声很远。", q: "既好奇，又有点怕", type: "none", bg: "#fef5e7", options: [["B","蹲下来研究清楚"], ["D","拍张照就走"]] },
-        { context: "高原湖泊，缺氧高反。天蓝得压在头顶。钉子就那么站着。", q: "无法名状的辽阔，以及卑微感", type: "snow", bg: "#dbeafe", options: [["F","裹紧衣服"], ["H","就那么站着"]] },
-        { context: "山路上，破摩托拧到一百码。眼泪被风吹出来，凉凉的。", q: "真年轻啊，年轻真好", type: "none", bg: "#f3f4f6", options: [["K","加速试试"], ["M","向目的地进发"]] },
-        { context: "雪山脚下等日出。同行的人说这就值了。钉子想，足够了。", q: "幸运的吧，人生总有些侥幸", type: "snow", bg: "#f8fafc", options: [["N","已经很好了"], ["P","什么都不想"]] },
-        { context: "有人问最近听什么歌。脑子里飘进那句：我看过沙漠下暴雨。", q: "说不上是哪首，但此刻很想听", type: "rain", bg: "#f3e8ff", options: [["R","我看过沙漠下暴雨"], ["S","我拥有的都是侥幸啊"]] }
-    ];
+const { createApp, ref, computed } = Vue;
 
-    const results = {
-        A: { emoji:"🥗", food: "轻食套餐", meta: "ORDERLY / CALM", desc: "不知道吃什么时的秩序化选择。你喜欢生活在可控的范围内，这种平淡的习惯本身就是一种安全感。" },
-        B: { emoji:"🥟", food: "皮蛋鲜肉馄饨", meta: "SURPRISE / SHORT", desc: "路口偶遇的惊艳。你喜欢生活中突如其来的小插曲，虽然热度有限，但那一刻的鲜美足够回味。" },
-        E: { emoji:"🍱", food: "咸肉菜饭", meta: "REALITY / WARM", desc: "向生活的小确幸低头。即使有时不尽如人意，但饱腹的踏实感是你面对世界的底气。" },
-        F: { emoji:"🥘", food: "泰式打抛饭", meta: "ADVENTURE / GAP", desc: "在平凡里寻找异域感。你对远方有幻想，即便现实只是豆角肉末，你也能品出冒险的味道。" },
-        I: { emoji:"🍗", food: "鸡腿饭", meta: "STEADY / LONG", desc: "最长情的告白。你不轻易改变，在最熟悉的选择里，你总能找到最省心的平衡点。" },
-        K: { emoji:"🍲", food: "王由里大盘鸡", meta: "HEAVY / MEMORY", desc: "记忆里的重工业风。你喜欢厚重的、热烈的表达，那一块吸饱汤汁的馕，就是你对美好的注解。" },
-        N: { emoji:"🍜", food: "酸辣土豆粉", meta: "STREET / CHILD", desc: "改不掉的小习惯。那些看起来没营养却带劲的东西，藏着你最真实、最不设防的一面。" },
-        P: { emoji:"🍳", food: "临沂鲜炒鸡", meta: "CLASSIC / DEEP", desc: "绝对的实力派。不需要浮夸的修饰，你知道什么是真正好的，就像你对自己生活的坚持。" },
-        R: { emoji:"🥗", food: "自选凉拌菜", meta: "FRESH / ALONE", desc: "爱吃酸的，不要蒜。你喜欢清爽独立，在嘈杂的世界里，更愿意带着这碗清爽去湖边独处。" },
-        S: { emoji:"🥣", food: "福鼎肉片", meta: "SOFT / COMFORT", desc: "那一碗紫菜汤的抚慰。你在意细节和温度，即便世界只是淀粉和肉的混合，你也能发现其中的鲜甜。" }
-    };
+createApp({
+    setup() {
+        const step = ref(0);
+        const answers = ref([]);
+        const totalQuestions = 10;
 
-    let cur = 0;
-    let answers = [];
+        const colors = [
+            '#e5e7eb', // 首页
+            '#dcfce7', // 1 逛公园
+            '#e0f2fe', // 2 冬天冷
+            '#fef9c3', // 3 睡午觉
+            '#ffedd5', // 4 龙子湖
+            '#ecfdf5', // 5 西湖骑行
+            '#f3f4f6', // 6 雕塑园
+            '#ede9fe', // 7 高原
+            '#fee2e2', // 8 摩托
+            '#fff7ed', // 9 雪山
+            '#f5f5f5'  // 10 歌词
+        ];
 
-    document.getElementById('startBtn').onclick = () => {
-        document.getElementById('page-start').style.display = 'none';
-        document.getElementById('page-quiz').style.display = 'flex';
-        render();
-    };
+        const questions = [
+            { title: "这绝对是个逛公园的好天气", desc: "昨晚大暴雨，现在凉快了。钉子站在阳台。", options: ["干点正经事儿", "出门遛遛", "今天不想动", "再墨迹一会儿"] },
+            { title: "夏天会好一点吧", desc: "冬天，一个人在路上走。冷。钉子把手缩进袖子里。", options: ["赶紧回去", "英勇就义之感", "出来干啥", "冷就冷吧没招了"] },
+            { title: "今天没什么非做不可的事", desc: "一觉睡到中午。光从窗帘缝漏进来。", options: ["不用赶时间", "起来出去走走", "再躺一会儿", "翻个身继续睡"] },
+            { title: "头发和风缠到一起", desc: "龙子湖傍晚，钉子骑车从白桥上往下冲。", options: ["回去 按部就班", "绕去没走过的那条路", "去湖边坐一会儿", "骑快一点 再快一点"] },
+            { title: "来过好多次，每次都不一样", desc: "杭州，绕着西湖骑车。行驶在树林里。", options: ["今天就骑到这儿吧", "去看看湖上划船的人", "停下来 在湖边坐一会儿", "一直骑 骑到骑不动"] },
+            { title: "既好奇，又有点怕", desc: "雕塑园海滩上，钉子看见一种不认识的小脚印。", options: ["蹲下来研究清楚", "拍张照就走", "视而不见", "害怕地站远一点"] },
+            { title: "无法名状之感", desc: "高原湖泊，缺氧高反的钉子。天压在头顶。", options: ["裹紧衣服", "往前走", "就那么站着", "差不多了"] },
+            { title: "真年轻啊 年轻真好", desc: "山路上，破摩托油门拧到一百码。", options: ["安全第一", "加速试试", "路边是谁的雕塑", "向目的地进发"] },
+            { title: "幸运的吧，但还是幸运的", desc: "玉龙雪山脚下等日出。同行的人说看过日照金山这辈子就值了。", options: ["这样已经很好了", "下次一个人去更远的地方", "什么都不想", "该走了 去下一站"] },
+            { title: "说不上是哪首，就这一句", desc: "有人问钉子最近听什么歌。她脑子里飘进来一句歌词。", options: ["我看过沙漠下暴雨...", "我拥有的都是侥幸啊...", "你是我梦里陌生，熟悉...", "扑火，我们相视笑着"] }
+        ];
 
-    function render() {
-        const item = questions[cur];
-        document.getElementById('q-idx-label').innerText = `STORY ${String(cur+1).padStart(2, '0')}`;
-        document.getElementById('q-percent').innerText = `${(cur+1)*10}%`;
-        document.getElementById('progress').style.width = `${(cur+1)*10}%`;
-        document.getElementById('q-text-small').innerText = item.q;
+        const foods = [
+            { name: "轻食套餐 🥗", kcal: "250–300大卡", ingredients: "鸡胸肉+西兰花+鲜果", story: "不知道吃什么的时候就是它。成了习惯，可能这就是土象星座骨子里的秩序感。" },
+            { name: "皮蛋鲜肉馄饨 🥟", kcal: "280–320大卡", ingredients: "猪肉+紫菜", story: "路口偶然发现的。是没预料到的惊喜。非常惊艳的鲜美，但是吃几个就腻了。下次再吃。" },
+            { name: "水果酸奶碗 🥣", kcal: "150–200大卡", ingredients: "蓝莓/草莓+无糖酸奶", story: "甜甜的，清清爽爽。感觉很健康好久没吃了。还留着一点对轻盈日子的念想。" },
+            { name: "排骨炖玉米 🌽", kcal: "400–450大卡", ingredients: "排骨+玉米", story: "看别人吃觉得应该不错，吃了也就那样。可能不会再吃吧，改发掘新食物了。" },
+            { name: "咸肉菜饭 🍱", kcal: "480–530大卡", ingredients: "鸡腿+双蛋+青菜", story: "青菜少，备注也不看，奈何一个鸡腿两个卤蛋。向卤蛋屈服了，好像有点咸。" },
+            { name: "泰式打抛饭 🥘", kcal: "500–560大卡", ingredients: "肉末+豆角", story: "在小吃街。国内没有当地的香料，跟普通豆角盖浇饭一样。白期待了。" },
+            { name: "越南小卷粉 🥢", kcal: "260–300大卡", ingredients: "米皮+鲜肉", story: "口味很特别，酸甜咸鲜。老板刚开摊不熟练，我也是第一次吃，包容他们。美味。" },
+            { name: "麻辣拌 🥗", kcal: "380–450大卡", ingredients: "杂蔬+豆制品", story: "蔬菜多，自己选，很自由。口味有点重，不怎么常吃，但选它的时候觉得今天可以稍微放纵一下。" },
+            { name: "鸡腿饭 🍗", kcal: "480–530大卡", ingredients: "卤鸡腿+绿色蔬菜", story: "下课就去，素菜自选。营养丰富，最不用动脑子的选项。天天吃也不腻，啥都吃不腻。" },
+            { name: "关东煮 🍢", kcal: "150–200大卡", ingredients: "萝卜+海带+虾皮", story: "不爱吃萝卜，但是专门要了萝卜。吃萝卜，咬下去第一口就通气了。玄学，没什么吃了。" },
+            { name: "王由里大盘鸡 🍲", kcal: "680–750大卡", ingredients: "鸡腿肉+土豆+馕", story: "洛阳品牌。在郑州也能喝上海碧。囊好吃。虽然好吃，没有多么喜欢吃。不知为何。" },
+            { name: "达美乐披萨 🍕", kcal: "单块220大卡", ingredients: "芝士+肉类+谷物饼底", story: "看起来好吃。吃了和想象不太一样。不吃总念想，吃了在懊悔，达美乐就这样反反复复。" },
+            { name: "麦当劳 🍔", kcal: "600–680大卡", ingredients: "肉类主食套餐", story: "简单，方便，靠近万象城地铁口，还算好吃。泰能打打抛猪猪堡专门去吃的。其实也不怎么经常吃。" },
+            { name: "酸辣土豆粉 🍜", kcal: "550–600大卡", ingredients: "土豆粉+酸豆角+辣椒", story: "很久没吃了。记得它很油，好像也没什么营养。小时候貌似喜欢吃。" },
+            { name: "胖哥俩猪蹄煲 🐖", kcal: "650–750大卡", ingredients: "猪蹄+鸡蛋+鸡爪", story: "好吃，香。不常吃，偶尔在商场看见会犹豫。快饿死了。猛猛吃。" },
+            { name: "临沂鲜炒鸡 🍳", kcal: "700–800大卡", ingredients: "鸡肉+土豆+宽面", story: "经常吃，吃不腻。好吃，经典。不多说。" },
+            { name: "炒米粉 🍝", kcal: "450–520大卡", ingredients: "米粉+鸡蛋+青菜", story: "上完体育课顺路买回宿舍。辣，香。奖励自己炒米粉。" },
+            { name: "自选凉拌菜 🥗", kcal: "180–250大卡", ingredients: "鲜蔬+豆制品+鹌鹑蛋", story: "菜多多。爱吃酸的，不要麻酱不要蒜。经常吃，不用犹豫。湖边坐着吃。" },
+            { name: "福鼎肉片 🥣", kcal: "220–260大卡", ingredients: "手工猪瘦肉+紫菜+葱花", story: "以为是蛋白质，实际淀粉含量高。挺鲜美的。吃一回也没啥，好喝。" }
+        ];
+
+        const currentBgColor = computed(() => colors[step.value] || '#f3f4f6');
         
-        // 背景颜色切换
-        document.body.style.background = item.bg;
-        
-        // 天气切换
-        updateWeather(item.type);
-
-        // 逐行渲染文案
-        const ctxBox = document.getElementById('q-context-box');
-        ctxBox.innerHTML = '';
-        const lines = item.context.split(/[，。？！]/).filter(s => s.trim());
-        lines.forEach((line, i) => {
-            const div = document.createElement('div');
-            div.className = 'line';
-            div.innerText = line;
-            div.style.animationDelay = `${i * 0.6}s`;
-            ctxBox.appendChild(div);
+        const finalFood = computed(() => {
+            const index = answers.value.reduce((a, b) => a + b, 0) % foods.length;
+            return foods[index];
         });
 
-        // 渲染选项
-        const optBox = document.getElementById('options-box');
-        optBox.style.opacity = 0;
-        optBox.innerHTML = '';
-        item.options.forEach(opt => {
-            const d = document.createElement('div');
-            d.className = 'option';
-            d.innerText = opt[1];
-            d.onclick = () => {
-                answers.push(opt[0]);
-                if(cur < 9) { cur++; render(); }
-                else { showResult(); }
-            };
-            optBox.appendChild(d);
-        });
-        setTimeout(() => {
-            optBox.style.transition = 'opacity 1s';
-            optBox.style.opacity = 1;
-        }, lines.length * 400);
-    }
-
-    function updateWeather(type) {
-        const layer = document.getElementById('weather-layer');
-        layer.innerHTML = '';
-        if (type === 'rain') {
-            for(let i=0; i<40; i++) {
-                const drop = document.createElement('div');
-                drop.className = 'rain-drop';
-                drop.style.left = Math.random() * 100 + '%';
-                drop.style.animationDuration = (Math.random() * 0.4 + 0.3) + 's';
-                drop.style.animationDelay = Math.random() * 2 + 's';
-                layer.appendChild(drop);
-            }
-        } else if (type === 'snow') {
-            for(let i=0; i<25; i++) {
-                const flake = document.createElement('div');
-                flake.className = 'snow-flake';
-                flake.style.left = Math.random() * 100 + '%';
-                const size = Math.random() * 6 + 4 + 'px';
-                flake.style.width = size; flake.style.height = size;
-                flake.style.animationDuration = (Math.random() * 4 + 3) + 's';
-                layer.appendChild(flake);
-            }
-        } else if (type === 'sun') {
-            const sun = document.createElement('div');
-            sun.className = 'sun-glow';
-            layer.appendChild(sun);
-        }
-    }
-
-    function showResult() {
-        document.getElementById('page-quiz').style.display = 'none';
-        document.getElementById('page-result').style.display = 'block';
-        document.body.style.background = "#f2f2f2";
+        const nextStep = () => step.value++;
         
-        const counts = {};
-        answers.forEach(a => counts[a] = (counts[a] || 0) + 1);
-        const top = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-        const res = results[top] || results['A'];
+        const handleAnswer = (idx) => {
+            answers.value.push(idx);
+            nextStep();
+        };
 
-        document.getElementById('res-emoji').innerText = res.emoji;
-        document.getElementById('res-name').innerText = res.food;
-        document.getElementById('res-ingredients').innerText = res.meta;
-        document.getElementById('res-desc').innerHTML = res.desc;
+        const reset = () => {
+            step.value = 0;
+            answers.value = [];
+        };
 
-        for(let i=0; i<50; i++) createConfetti();
+        const rainStyle = (n) => ({
+            left: Math.random() * 100 + '%',
+            animation: `rain-drop ${Math.random() * 2 + 1}s linear infinite`,
+            animationDelay: Math.random() * 2 + 's'
+        });
+
+        return { step, questions, handleAnswer, finalFood, currentBgColor, nextStep, totalQuestions, rainStyle, reset };
     }
-
-    function createConfetti() {
-        const c = document.createElement('div');
-        c.className = 'confetti';
-        c.style.left = Math.random() * 100 + '%';
-        c.style.top = '-10px';
-        const colors = ['#d35400','#1a1a1a','#f1c40f','#e67e22'];
-        c.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
-        document.body.appendChild(c);
-        c.animate([
-            { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
-            { transform: `translateY(100vh) rotate(${Math.random()*360}deg)`, opacity: 0 }
-        ], { duration: Math.random() * 2000 + 2000, easing: 'cubic-bezier(0,0,0.2,1)' }).onfinish = () => c.remove();
-    }
+}).mount('#app');
 </script>
+
+<style>
+@keyframes rain-drop {
+    0% { transform: translateY(-100vh); }
+    100% { transform: translateY(100vh); }
+}
+</style>
+
 </body>
 </html>
