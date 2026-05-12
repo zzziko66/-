@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>钉子今天吃什么</title>
+<style>
+    :root { 
+        --primary: #1a1a1a; 
+        --accent: #d35400;  
+        --bg-default: #f2f2f2; 
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        font-family: "PingFang SC", "STHeiti", sans-serif;
+        background: var(--bg-default); 
+        transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1); 
+        display: flex; justify-content: center; align-items: center; min-height: 100vh;
+        color: #333; overflow: hidden;
+    }
+
+    /* 天气层 */
+    #weather-layer {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; z-index: 1;
+    }
+
+    .container { 
+        width: 100%; max-width: 414px; height: 92vh; 
+        background: rgba(255, 255, 255, 0.4); 
+        backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+        position: relative; display: flex; flex-direction: column; 
+        border-radius: 30px; z-index: 2;
+        box-shadow: 0 40px 100px rgba(0,0,0,0.08);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    @media (max-width: 414px) { .container { height: 100vh; border-radius: 0; } }
+
+    /* 逐行动画 */
+    .line { opacity: 0; transform: translateY(15px); animation: lineFadeIn 0.8s forwards; margin-bottom: 10px; }
+    @keyframes lineFadeIn { to { opacity: 1; transform: translateY(0); } }
+
+    /* 首页样式 */
+    #page-start { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 40px; }
+    .main-emoji { font-size: 80px; margin-bottom: 20px; }
+    h1 { font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; letter-spacing: 1px; }
+    .subtitle { font-size: 15px; color: #666; font-weight: 300; }
+    
+    /* 长方形按钮优化 */
+    .btn-start { 
+        margin-top: 50px; background: #1a1a1a; color: #fff; width: 220px; padding: 18px 0;
+        border: none; border-radius: 16px; font-weight: 600; font-size: 16px; 
+        cursor: pointer; transition: 0.4s; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        letter-spacing: 4px; padding-left: 20px; /* 视觉对齐 */
+    }
+    .btn-start:active { transform: scale(0.96); opacity: 0.9; }
+
+    /* 答题区样式 */
+    #page-quiz { display: none; flex-direction: column; flex: 1; padding: 40px 30px; overflow-y: auto; }
+    .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 11px; color: #888; letter-spacing: 2px; }
+    .progress-bar { height: 2px; background: rgba(0,0,0,0.05); border-radius: 1px; margin-bottom: 30px; }
+    .progress { height: 100%; background: #1a1a1a; width: 0%; transition: 1s ease; }
+    
+    .q-title-top { font-size: 13px; color: #999; margin-bottom: 15px; font-weight: 400; border-left: 2px solid #1a1a1a; padding-left: 10px; }
+    .q-context-box { font-size: 24px; font-weight: 600; line-height: 1.5; color: #1a1a1a; margin-bottom: 30px; }
+    
+    #options-box { margin-top: auto; padding-bottom: 20px; }
+    .option { 
+        background: rgba(255, 255, 255, 0.7); padding: 20px 24px; border-radius: 18px; margin-bottom: 12px; 
+        cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.5); 
+        font-size: 16px; line-height: 1.4; color: #444; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    }
+    .option:active { background: #fff; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
+
+    /* 结果页 */
+    #page-result { display: none; padding: 40px 30px; text-align: center; }
+    .res-card { 
+        background: #fff; border-radius: 35px; padding: 40px 25px; 
+        box-shadow: 0 30px 70px rgba(0,0,0,0.1); position: relative;
+        animation: cardPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes cardPop { from { opacity: 0; transform: scale(0.9) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    
+    .res-food-name { font-size: 32px; font-weight: 800; margin: 15px 0; color: #1a1a1a; }
+    .res-meta { font-size: 12px; color: var(--accent); letter-spacing: 2px; margin-bottom: 20px; font-weight: 600; }
+    .res-desc { text-align: left; font-size: 14px; line-height: 1.8; color: #555; padding: 20px; background: #fbfbfb; border-radius: 20px; }
+
+    /* 动态天气效果 */
+    .rain-drop { position: absolute; background: rgba(0,0,0,0.08); width: 1px; height: 25px; animation: rain linear infinite; }
+    @keyframes rain { to { transform: translateY(100vh); } }
+    .snow-flake { position: absolute; background: #fff; border-radius: 50%; opacity: 0.6; animation: snow linear infinite; }
+    @keyframes snow { to { transform: translateY(100vh) rotate(360deg); } }
+    .sun-glow { position: absolute; top: -100px; right: -100px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%); opacity: 0.4; }
+
+    .confetti { position: absolute; width: 8px; height: 8px; z-index: 10; border-radius: 2px; }
+</style>
+</head>
+
+<body>
+<div id="weather-layer"></div>
+
+<div class="container">
+    <!-- 首页 -->
+    <div id="page-start">
+        <div class="main-emoji">🍱</div>
+        <h1>钉子今天吃什么</h1>
+        <p class="subtitle">这是一个值得深思的问题</p>
+        <button class="btn-start" id="startBtn">开始深思</button>
+    </div>
+
+    <!-- 答题页 -->
+    <div id="page-quiz">
+        <div class="q-header">
+            <span id="q-idx-label">STORY 01</span>
+            <span id="q-percent">10%</span>
+        </div>
+        <div class="progress-bar"><div class="progress" id="progress"></div></div>
+        <div id="question-content">
+            <p class="q-title-top" id="q-text-small"></p>
+            <div class="q-context-box" id="q-context-box"></div>
+        </div>
+        <div id="options-box"></div>
+    </div>
+
+    <!-- 结果页 -->
+    <div id="page-result">
+        <div style="font-size: 12px; color: #999; margin-bottom: 25px; letter-spacing: 4px; font-weight: 300;">命中注定的那一餐</div>
+        <div class="res-card">
+            <div id="res-emoji" style="font-size: 70px; margin-bottom: 10px;"></div>
+            <h2 class="res-food-name" id="res-name"></h2>
+            <p class="res-meta" id="res-ingredients"></p>
+            <div class="res-desc" id="res-desc"></div>
+        </div>
+        <button onclick="location.reload()" style="margin-top: 40px; background: none; border: none; color: #999; cursor: pointer; font-size: 13px; text-decoration: underline;">重新感知 ↺</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { context: "昨晚大暴雨，现在凉快了。钉子站在阳台，看远处的树。", q: "这绝对是个逛公园的好天气", type: "rain", bg: "#d5e8d4", options: [["A","干点正经事儿"], ["B","出门遛遛"]] },
+        { context: "冬天，一个人在路上走。冷。钉子把手缩进袖子里。想起来夏天。", q: "夏天会好一点吧，哪怕热一点", type: "none", bg: "#e1e4e8", options: [["E","赶紧回去"], ["F","英勇就义之感"]] },
+        { context: "一觉睡到中午。光从窗帘缝漏进来，洒在木地板上。没声音。", q: "今天没什么非做不可的事", type: "sun", bg: "#fff9db", options: [["I","不用赶时间"], ["K","再躺一会儿"]] },
+        { context: "龙子湖傍晚，从白桥上往下冲。风把头发和耳机的线缠在一起。", q: "速度感让人暂时忘记晚餐的纠结", type: "none", bg: "#fce5cd", options: [["N","绕去没走过的那路"], ["O","去湖边坐会儿"]] },
+        { context: "杭州，绕着西湖骑车。行驶在巨大的香樟树影里。深深吸一口气。", q: "来过好多次，每次都不一样", type: "sun", bg: "#e2f3eb", options: [["Q","今天就骑到这儿吧"], ["A","一直骑，骑到骑不动"]] },
+        { context: "雕塑园海滩。一种不认识的小脚印在沙滩蔓延。海浪声很远。", q: "既好奇，又有点怕", type: "none", bg: "#fef5e7", options: [["B","蹲下来研究清楚"], ["D","拍张照就走"]] },
+        { context: "高原湖泊，缺氧高反。天蓝得压在头顶。钉子就那么站着。", q: "无法名状的辽阔，以及卑微感", type: "snow", bg: "#dbeafe", options: [["F","裹紧衣服"], ["H","就那么站着"]] },
+        { context: "山路上，破摩托拧到一百码。眼泪被风吹出来，凉凉的。", q: "真年轻啊，年轻真好", type: "none", bg: "#f3f4f6", options: [["K","加速试试"], ["M","向目的地进发"]] },
+        { context: "雪山脚下等日出。同行的人说这就值了。钉子想，足够了。", q: "幸运的吧，人生总有些侥幸", type: "snow", bg: "#f8fafc", options: [["N","已经很好了"], ["P","什么都不想"]] },
+        { context: "有人问最近听什么歌。脑子里飘进那句：我看过沙漠下暴雨。", q: "说不上是哪首，但此刻很想听", type: "rain", bg: "#f3e8ff", options: [["R","我看过沙漠下暴雨"], ["S","我拥有的都是侥幸啊"]] }
+    ];
+
+    const results = {
+        A: { emoji:"🥗", food: "轻食套餐", meta: "ORDERLY / CALM", desc: "不知道吃什么时的秩序化选择。你喜欢生活在可控的范围内，这种平淡的习惯本身就是一种安全感。" },
+        B: { emoji:"🥟", food: "皮蛋鲜肉馄饨", meta: "SURPRISE / SHORT", desc: "路口偶遇的惊艳。你喜欢生活中突如其来的小插曲，虽然热度有限，但那一刻的鲜美足够回味。" },
+        E: { emoji:"🍱", food: "咸肉菜饭", meta: "REALITY / WARM", desc: "向生活的小确幸低头。即使有时不尽如人意，但饱腹的踏实感是你面对世界的底气。" },
+        F: { emoji:"🥘", food: "泰式打抛饭", meta: "ADVENTURE / GAP", desc: "在平凡里寻找异域感。你对远方有幻想，即便现实只是豆角肉末，你也能品出冒险的味道。" },
+        I: { emoji:"🍗", food: "鸡腿饭", meta: "STEADY / LONG", desc: "最长情的告白。你不轻易改变，在最熟悉的选择里，你总能找到最省心的平衡点。" },
+        K: { emoji:"🍲", food: "王由里大盘鸡", meta: "HEAVY / MEMORY", desc: "记忆里的重工业风。你喜欢厚重的、热烈的表达，那一块吸饱汤汁的馕，就是你对美好的注解。" },
+        N: { emoji:"🍜", food: "酸辣土豆粉", meta: "STREET / CHILD", desc: "改不掉的小习惯。那些看起来没营养却带劲的东西，藏着你最真实、最不设防的一面。" },
+        P: { emoji:"🍳", food: "临沂鲜炒鸡", meta: "CLASSIC / DEEP", desc: "绝对的实力派。不需要浮夸的修饰，你知道什么是真正好的，就像你对自己生活的坚持。" },
+        R: { emoji:"🥗", food: "自选凉拌菜", meta: "FRESH / ALONE", desc: "爱吃酸的，不要蒜。你喜欢清爽独立，在嘈杂的世界里，更愿意带着这碗清爽去湖边独处。" },
+        S: { emoji:"🥣", food: "福鼎肉片", meta: "SOFT / COMFORT", desc: "那一碗紫菜汤的抚慰。你在意细节和温度，即便世界只是淀粉和肉的混合，你也能发现其中的鲜甜。" }
+    };
+
+    let cur = 0;
+    let answers = [];
+
+    document.getElementById('startBtn').onclick = () => {
+        document.getElementById('page-start').style.display = 'none';
+        document.getElementById('page-quiz').style.display = 'flex';
+        render();
+    };
+
+    function render() {
+        const item = questions[cur];
+        document.getElementById('q-idx-label').innerText = `STORY ${String(cur+1).padStart(2, '0')}`;
+        document.getElementById('q-percent').innerText = `${(cur+1)*10}%`;
+        document.getElementById('progress').style.width = `${(cur+1)*10}%`;
+        document.getElementById('q-text-small').innerText = item.q;
+        
+        // 背景颜色切换
+        document.body.style.background = item.bg;
+        
+        // 天气切换
+        updateWeather(item.type);
+
+        // 逐行渲染文案
+        const ctxBox = document.getElementById('q-context-box');
+        ctxBox.innerHTML = '';
+        const lines = item.context.split(/[，。？！]/).filter(s => s.trim());
+        lines.forEach((line, i) => {
+            const div = document.createElement('div');
+            div.className = 'line';
+            div.innerText = line;
+            div.style.animationDelay = `${i * 0.6}s`;
+            ctxBox.appendChild(div);
+        });
+
+        // 渲染选项
+        const optBox = document.getElementById('options-box');
+        optBox.style.opacity = 0;
+        optBox.innerHTML = '';
+        item.options.forEach(opt => {
+            const d = document.createElement('div');
+            d.className = 'option';
+            d.innerText = opt[1];
+            d.onclick = () => {
+                answers.push(opt[0]);
+                if(cur < 9) { cur++; render(); }
+                else { showResult(); }
+            };
+            optBox.appendChild(d);
+        });
+        setTimeout(() => {
+            optBox.style.transition = 'opacity 1s';
+            optBox.style.opacity = 1;
+        }, lines.length * 400);
+    }
+
+    function updateWeather(type) {
+        const layer = document.getElementById('weather-layer');
+        layer.innerHTML = '';
+        if (type === 'rain') {
+            for(let i=0; i<40; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'rain-drop';
+                drop.style.left = Math.random() * 100 + '%';
+                drop.style.animationDuration = (Math.random() * 0.4 + 0.3) + 's';
+                drop.style.animationDelay = Math.random() * 2 + 's';
+                layer.appendChild(drop);
+            }
+        } else if (type === 'snow') {
+            for(let i=0; i<25; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snow-flake';
+                flake.style.left = Math.random() * 100 + '%';
+                const size = Math.random() * 6 + 4 + 'px';
+                flake.style.width = size; flake.style.height = size;
+                flake.style.animationDuration = (Math.random() * 4 + 3) + 's';
+                layer.appendChild(flake);
+            }
+        } else if (type === 'sun') {
+            const sun = document.createElement('div');
+            sun.className = 'sun-glow';
+            layer.appendChild(sun);
+        }
+    }
+
+    function showResult() {
+        document.getElementById('page-quiz').style.display = 'none';
+        document.getElementById('page-result').style.display = 'block';
+        document.body.style.background = "#f2f2f2";
+        
+        const counts = {};
+        answers.forEach(a => counts[a] = (counts[a] || 0) + 1);
+        const top = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+        const res = results[top] || results['A'];
+
+        document.getElementById('res-emoji').innerText = res.emoji;
+        document.getElementById('res-name').innerText = res.food;
+        document.getElementById('res-ingredients').innerText = res.meta;
+        document.getElementById('res-desc').innerHTML = res.desc;
+
+        for(let i=0; i<50; i++) createConfetti();
+    }
+
+    function createConfetti() {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + '%';
+        c.style.top = '-10px';
+        const colors = ['#d35400','#1a1a1a','#f1c40f','#e67e22'];
+        c.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+        document.body.appendChild(c);
+        c.animate([
+            { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+            { transform: `translateY(100vh) rotate(${Math.random()*360}deg)`, opacity: 0 }
+        ], { duration: Math.random() * 2000 + 2000, easing: 'cubic-bezier(0,0,0.2,1)' }).onfinish = () => c.remove();
+    }
+</script>
+</body>
+</html>
